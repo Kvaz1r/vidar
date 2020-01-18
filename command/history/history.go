@@ -27,6 +27,7 @@ func Bindables(_ command.Commander, _ gxui.Driver, theme *basic.Theme) []bind.Bi
 type History struct {
 	current tree
 	skip    node
+	path    string
 
 	// all stores history for all files - it is used when the open
 	// file is changed, to store the history for the previously open
@@ -144,12 +145,16 @@ func (h *History) Apply(input.Editor) error { return nil }
 
 // FileChanged updates the current history when the focused
 // file is changed.
-func (h *History) FileChanged(oldPath, newPath string) {
+func (h *History) FileChanged(newPath string) {
+	if h.path == newPath {
+		return
+	}
 	h.allMu.Lock()
 	defer h.allMu.Unlock()
-	if oldPath != "" {
-		h.all[oldPath] = h.current.trunk()
+	if h.path != "" {
+		h.all[h.path] = h.current.trunk()
 	}
 	h.resetCurrent(newPath)
+	h.path = newPath
 	h.skip.setNext(nil)
 }

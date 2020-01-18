@@ -55,7 +55,7 @@ type FileBinder interface {
 type FileChanger interface {
 	// FileChanged will be called when the currently focused
 	// file changes.
-	FileChanged(oldPath, newPath string)
+	FileChanged(newPath string)
 }
 
 // A Binder is a type which can bind bindables
@@ -226,10 +226,8 @@ func (l *Location) moverReady() bool {
 // Exec executes l against the values it has stored, returning an
 // error if it encounters any problems.
 func (l *Location) Exec() error {
-	var oldPath string
 	e := l.opener.CurrentEditor()
 	if !l.skipUnbind && e != nil {
-		oldPath = e.Filepath()
 		l.binder.Pop()
 	}
 	path := l.path
@@ -243,11 +241,10 @@ func (l *Location) Exec() error {
 	for _, o := range l.openers {
 		o.Open(path)
 	}
-	if oldPath != path {
-		for _, c := range l.changers {
-			c.FileChanged(oldPath, path)
-		}
+	for _, c := range l.changers {
+		c.FileChanged(path)
 	}
+
 	var b []bind.Bindable
 	for _, binder := range l.binders {
 		b = append(b, binder.FileBindables(path)...)
